@@ -1,6 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -24,7 +26,7 @@ namespace BurstMaster
         public class MySettings
         {
             // BASE NEEDED FOR CONFIRMATION
-            public bool settingsSet
+            public bool SettingsSet
             {
                 get;
                 set;
@@ -411,6 +413,16 @@ namespace BurstMaster
                 set;
             }
 
+            // SPELL ORDER
+
+            public string SpellOrder
+            {
+                get;
+                set;
+            }
+
+            // MP RECOVERY
+
             public bool AspirToggle
             {
                 get;
@@ -431,6 +443,18 @@ namespace BurstMaster
 
             // PROGRAM OPTIONS
             public bool GeomancerOnlyInCombat
+            {
+                get;
+                set;
+            }
+
+            public string IPAddress
+            {
+                get;
+                set;
+            }
+
+            public string PortNumber
             {
                 get;
                 set;
@@ -581,6 +605,8 @@ namespace BurstMaster
 
             config.FragmentationType = FragmentationType.SelectedIndex;
 
+            config.SpellOrder = GrabOrderString("save");
+
             config.AspirToggle = AspirToggle.IsChecked ?? false;
 
             config.MyrkrToggle = MyrkrToggle.IsChecked ?? false;
@@ -591,7 +617,11 @@ namespace BurstMaster
 
             config.GeomancerOnlyInCombat = GeomancerOnlyInCombat.IsChecked ?? false;
 
-            config.settingsSet = true;
+            config.IPAddress = IPAddress.Text;
+
+            config.PortNumber = PortNumber.Text;
+
+            config.SettingsSet = true;
 
             this.Close();
         }
@@ -602,13 +632,14 @@ namespace BurstMaster
 
         private void SaveSettings_Click(object sender, System.Windows.RoutedEventArgs e)
         {
-            SaveFileDialog savefile = new SaveFileDialog();
+            SaveFileDialog savefile = new SaveFileDialog
+            {
+                FileName = "Settings.xml",
 
-            savefile.FileName = "Settings.xml";
-
-            savefile.Filter = " Extensible Markup Language (*.xml)|*.xml";
-            savefile.FilterIndex = 2;
-            savefile.InitialDirectory = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Settings");
+                Filter = " Extensible Markup Language (*.xml)|*.xml",
+                FilterIndex = 2,
+                InitialDirectory = System.IO.Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "Settings")
+            };
 
             if (savefile.ShowDialog() == true)
             {
@@ -731,6 +762,8 @@ namespace BurstMaster
 
             FragmentationType.SelectedIndex = config.FragmentationType;
 
+            GrabOrderString("load");
+
             AspirToggle.IsChecked = config.AspirToggle;
 
             MyrkrToggle.IsChecked = config.MyrkrToggle;
@@ -741,7 +774,10 @@ namespace BurstMaster
 
             GeomancerOnlyInCombat.IsChecked = config.GeomancerOnlyInCombat;
 
-            config.settingsSet = true;
+            IPAddress.Text = config.IPAddress;
+            PortNumber.Text = config.PortNumber;
+
+            config.SettingsSet = true;
         }
 
         #endregion "UPDATE THE FORM WITH THE CURRENT CONFIG DATA FUNCTION"
@@ -761,7 +797,7 @@ namespace BurstMaster
 
             #region "SET THE DEFAULT SETTINGS FOR THE BOT"
 
-            if (config.settingsSet != true)
+            if (config.SettingsSet != true)
             {
                 // JOB ABILITIES SETTINGS
 
@@ -866,17 +902,25 @@ namespace BurstMaster
 
                 config.FragmentationType = 0;
 
+                config.SpellOrder = "Tier VI;Tier V;Tier IV;Tier III;Tier II;Tier I";
+
                 config.AspirToggle = false;
 
                 config.MyrkrToggle = false;
 
                 config.DaganToggle = false;
 
+
+
                 // PROGRAM OPTIONS
 
                 config.GeomancerOnlyInCombat = false;
 
-                config.settingsSet = true;
+                config.IPAddress = "127.0.0.1";
+
+                config.PortNumber = "19401";
+
+                config.SettingsSet = true;
             }
             else
             {
@@ -928,6 +972,48 @@ namespace BurstMaster
             myListBox.Items.RemoveAt(idx);
             myListBox.Items.Insert(idx + 1, elem);
             myListBox.SelectedIndex = idx + 1;
+        }
+
+        #endregion
+
+        #region "GRAB ORDER STRING"
+
+        private string GrabOrderString(string function)
+        {
+            if (function == "load")
+            {
+                SpellOrder.Items.Clear();
+
+                string formatted_string = String.Empty;
+                List<string> SpellsOrder = config.SpellOrder.Split(';').ToList<string>();
+
+                for (int i = 0; i < SpellsOrder.Count; i++)
+                {
+                    if (SpellsOrder[i] != "" && SpellsOrder[i] != " ")
+                    {
+                        SpellOrder.Items.Add(SpellsOrder[i]);
+                    }
+                }
+
+
+                return "DoNothing";
+
+
+            }
+            else if (function == "save")
+            {
+                string formatted_string = String.Empty;
+
+                for (int i = 0; i < SpellOrder.Items.Count; i++)
+                {
+                    formatted_string = formatted_string + (SpellOrder.Items[i].ToString()) + ";";
+                }
+                return formatted_string;
+            }
+            else
+                return "DoNothing";
+
+
         }
 
         #endregion

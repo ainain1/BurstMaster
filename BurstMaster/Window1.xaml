@@ -133,12 +133,7 @@
                                         <RowDefinition Height="31*"/>
                                     </Grid.RowDefinitions>
                                     <ListBox Name="SpellOrder" HorizontalAlignment="Left" Width="283" Grid.ColumnSpan="2" Grid.Row="0" Margin="10,6,0,6">
-                                        <ListBoxItem>Tier VI</ListBoxItem>
-                                        <ListBoxItem>Tier V</ListBoxItem>
-                                        <ListBoxItem>Tier IV</ListBoxItem>
-                                        <ListBoxItem>Tier III</ListBoxItem>
-                                        <ListBoxItem>Tier II</ListBoxItem>
-                                        <ListBoxItem>Tier I</ListBoxItem>
+
                                     </ListBox>
                                     <Button Content="move up" Name="MoveUp" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Top" Click="MoveUp_Click" Margin="10,0,0,0" Height="27" Width="57"/>
                                     <Button Content="move down" Name="MoveDown" Grid.Column="1" HorizontalAlignment="Left" Grid.Row="1" VerticalAlignment="Top" Click="MoveDown_Click" Height="27" Width="77"/>
@@ -1533,9 +1528,9 @@
                 </Grid>
             </TabItem>
             <TabItem Margin="0,0,-96,0" Header="Program">
-                <Grid Margin="-13,0,-14,-9" Background="#fff" >
+                <Grid Margin="-13,0,7,-9" Background="#fff" >
                     <GroupBox
-                        Width="275"
+                        Width="326"
                         Height="60"
                         Margin="15,10,0,0"
                         HorizontalAlignment="Left"
@@ -1561,6 +1556,34 @@
                                 OnLabel=""
                                 Style="{StaticResource MahApps.Metro.Styles.ToggleSwitch.Win10}" Margin="2,2,-3,2" />
 
+                        </Grid>
+                    </GroupBox>
+                    <GroupBox
+                        Width="275"
+                        Height="99"
+                        Margin="421,10,0,0"
+                        HorizontalAlignment="Left"
+                        VerticalAlignment="Top"
+                        Header="Addon Configuration">
+
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="33*"/>
+                                <RowDefinition Height="33*"/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="97*"/>
+                                <ColumnDefinition Width="168*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="IP Address" Grid.Row="0" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1" Name="IPAddress" Width="150" Height="25" />
+                            <Label Content="Port Number" Grid.Row ="1" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center"/>
+                            <TextBox Grid.Column="1" Grid.Row="1"  Name="PortNumber" Width="150" Height="25" />
+
+                            <Label Content="" Grid.Row="2" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center"/>
+
+
+                            <Label Content="" Grid.Row="3" HorizontalAlignment="Left" Margin="0" VerticalAlignment="Center"/>
                         </Grid>
                     </GroupBox>
 

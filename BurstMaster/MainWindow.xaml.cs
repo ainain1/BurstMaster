@@ -6,10 +6,12 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -64,8 +66,6 @@ namespace BurstMaster
         public List<SkillchainData> skillchains = new List<SkillchainData>();
 
         public string WindowerMode = "Windower";
-
-        private int lastCommand = 0;
 
         private bool BurstPossible = false;
         private bool InCombat = false;
@@ -356,8 +356,6 @@ namespace BurstMaster
                     api.ThirdParty.SendString("/addon load BurstMaster_addon");
                 }
 
-                lastCommand = api.ThirdParty.ConsoleIsNewCommand();
-
                 firstSelect = 1;
             }
         }
@@ -528,27 +526,43 @@ namespace BurstMaster
             }
             else if (spell == "Indi")
             {
-                // grab tier
-                int Tier = Window1.config.IndiSpell;
-                // known tiers
-                var KnownTiers = new List<string> {"Indi-Voidance", "Indi-Precision", "Indi-Regen", "Indi-Haste", "Indi-Attunement", "Indi-Focus", "Indi-Barrier",
+                if (Window1.config.IndiSpell == -1)
+                {
+                    return false;
+
+                }
+                else
+                {
+                    // grab tier
+                    int Tier = Window1.config.IndiSpell;
+                    // known tiers
+                    var KnownTiers = new List<string> {"Indi-Voidance", "Indi-Precision", "Indi-Regen", "Indi-Haste", "Indi-Attunement", "Indi-Focus", "Indi-Barrier",
                                                        "Indi-Refresh", "Indi-CHR", "Indi-MND", "Indi-Fury", "Indi-INT", "Indi-AGI", "Indi-Fend", "Indi-VIT", "Indi-DEX",
                                                        "Indi-Acumen", "Indi-STR", "Indi-Poison", "Indi-Slow", "Indi-Torpor", "Indi-Slip","Indi-Languor", "Indi-Paralysis",
                                                        "Indi-Vex","Indi-Frailty","Indi-Wilt","Indi-Malaise", "Indi-Gravity", "Indi-Fade" };
-                // Generated Spell Name
-                SpellName = KnownTiers[Tier];
-            } 
+                    // Generated Spell Name
+                    SpellName = KnownTiers[Tier];
+                }
+            }
             else if (spell == "Geo")
             {
-                // grab tier
-                int Tier = Window1.config.GeoSpell;
-                // known tiers
-                var KnownTiers = new List<string> {"Geo-Voidance", "Geo-Precision", "Geo-Regen", "Geo-Haste", "Geo-Attunement", "Geo-Focus", "Geo-Barrier",
+                if (Window1.config.GeoSpell == -1)
+                {
+                    return false;
+
+                }
+                else
+                {
+                    // grab tier
+                    int Tier = Window1.config.GeoSpell;
+                    // known tiers
+                    var KnownTiers = new List<string> {"Geo-Voidance", "Geo-Precision", "Geo-Regen", "Geo-Haste", "Geo-Attunement", "Geo-Focus", "Geo-Barrier",
                                                        "Geo-Refresh", "Geo-CHR", "Geo-MND", "Geo-Fury", "Geo-INT", "Geo-AGI", "Geo-Fend", "Geo-VIT", "Geo-DEX",
                                                        "Geo-Acumen", "Geo-STR", "Geo-Poison", "Geo-Slow", "Geo-Torpor", "Geo-Slip","Geo-Languor", "Geo-Paralysis",
                                                        "Geo-Vex","Geo-Frailty","Geo-Wilt","Geo-Malaise", "Geo-Gravity", "Geo-Fade" };
-                // Generated Spell Name
-                SpellName = KnownTiers[Tier];
+                    // Generated Spell Name
+                    SpellName = KnownTiers[Tier];
+                }
             }
             else
                 SpellName = spell;
@@ -701,6 +715,7 @@ namespace BurstMaster
 
         private void PerformBuffingTimer_Tick(object sender, EventArgs e)
         {
+
             if (BurstPossible == false && IsRunning == true && CanCast == true && (api.Player.Status == 1 || api.Player.Status == 0))
             {
                 // CURING
@@ -852,7 +867,7 @@ namespace BurstMaster
                     CastSpell(KnownTiers[Tier], "<me>");
                 }
                 // GEOMANCY SPELLS - INDI
-                else if (CanCastSpell("Indi") && IsBuffActive(612, "None") && ((Window1.config.GeomancerOnlyInCombat == true && CombatStatus == true) || Window1.config.GeomancerOnlyInCombat == false))
+                else if ((CanCastSpell("Indi") && Window1.config.IndiSpell != -1 && IsBuffActive(612, "None")) && ((Window1.config.GeomancerOnlyInCombat == true && CombatStatus == true) || Window1.config.GeomancerOnlyInCombat == false))
                 {
                     // grab tier
                     int Tier = Window1.config.IndiSpell;
@@ -865,7 +880,7 @@ namespace BurstMaster
                     CastSpell(KnownTiers[Tier], "<me>");
                 }
                 // GEOMANCY SPELLS - GEO
-                else if (CanCastSpell("Geo") && ((Window1.config.GeomancerOnlyInCombat == true && CombatStatus == true) || Window1.config.GeomancerOnlyInCombat == false && GeoSpell_CombatRequirement(Window1.config.GeoSpell)) == true && api.Player.Pet.HealthPercent < 1)
+                else if ((CanCastSpell("Geo") && Window1.config.GeoSpell != -1) && ((Window1.config.GeomancerOnlyInCombat == true && CombatStatus == true) || Window1.config.GeomancerOnlyInCombat == false && GeoSpell_CombatRequirement(Window1.config.GeoSpell)) == true && api.Player.Pet.HealthPercent < 1)
                 {
 
                     // grab tier
@@ -937,7 +952,6 @@ namespace BurstMaster
 
         #endregion
 
-
         #region "Backgrounds worker to check for commands"
         public void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -951,71 +965,140 @@ namespace BurstMaster
             }
             if (api.Player.LoginStatus == (int)LoginStatus.Loading)
             {
-                System.Threading.Thread.Sleep(17000);
+                return;
             }
 
-            string lastCmd = string.Empty;
+            int listenPort = Convert.ToInt32(Window1.config.PortNumber);
 
-            int cmdTime = api.ThirdParty.ConsoleIsNewCommand();
+            UdpClient listener = new UdpClient(listenPort);
+            IPEndPoint groupEP = new IPEndPoint(IPAddress.Parse(Window1.config.IPAddress), listenPort);
 
-            if (lastCommand != cmdTime)
+            string received_data;
+
+            byte[] receive_byte_array;
+
+            bool done = false;
+
+            try
             {
-                lastCommand = cmdTime;
-                lastCmd = string.Empty;
-
-                if (api.ThirdParty.ConsoleGetArg(0) == "burstmaster")
+                while (!done)
                 {
-                    int argCount = api.ThirdParty.ConsoleGetArgCount();
-                    if (argCount > 2)
+                    receive_byte_array = listener.Receive(ref groupEP);
+
+                    received_data = Encoding.ASCII.GetString(receive_byte_array, 0, receive_byte_array.Length);
+
+
+                    string[] data_1 = received_data.Split(' ');
+
+                    if (data_1[0] == "burstmaster")
                     {
-                        string skillchainLocated = api.ThirdParty.ConsoleGetArg(1);
-                        timeDated = DateTime.Parse(api.ThirdParty.ConsoleGetArg(2));
 
-                        Task.Factory.StartNew(() =>
+                        int argCount = api.ThirdParty.ConsoleGetArgCount();
+                        if (argCount > 2)
                         {
-                            Dispatcher.BeginInvoke(new Action(() => { this.SkillchainRecieved.Content = api.ThirdParty.ConsoleGetArg(1); }));
-                            Dispatcher.BeginInvoke(new Action(() => { this.TimeRecieved.Content = api.ThirdParty.ConsoleGetArg(2); }));
-                        });
+                            string skillchainLocated = api.ThirdParty.ConsoleGetArg(1);
+                            timeDated = DateTime.Parse(api.ThirdParty.ConsoleGetArg(2));
 
-                        RunBurstAction(api.ThirdParty.ConsoleGetArg(1), api.ThirdParty.ConsoleGetArg(2));
+                            Task.Factory.StartNew(() =>
+                            {
+                                Dispatcher.BeginInvoke(new Action(() => { this.SkillchainRecieved.Content = api.ThirdParty.ConsoleGetArg(1); }));
+                                Dispatcher.BeginInvoke(new Action(() => { this.TimeRecieved.Content = api.ThirdParty.ConsoleGetArg(2); }));
+                            });
+
+                            RunBurstAction(api.ThirdParty.ConsoleGetArg(1), api.ThirdParty.ConsoleGetArg(2));
+                        }
+                        else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1).ToLower() == "finished")
+                        {
+                            System.Threading.Thread.Sleep(2500);
+                            Task.Factory.StartNew(() =>
+                            {
+                                Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is possible."; }));
+                                Dispatcher.BeginInvoke(new Action(() => { this.ActionBeingPerformed.Content = String.Empty; }));
+                            });
+
+                            CanCast = true;
+                        }
+                        else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1).ToLower() == "NOTfinished")
+                        {
+                            Task.Factory.StartNew(() =>
+                            {
+                                Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is NOT possible."; }));
+                            });
+                        }
+                        else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1).ToLower() == "interruption")
+                        {
+                            Task.Factory.StartNew(() =>
+                            {
+                                Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting was interrupted."; }));
+                            });
+
+                            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2.5));
+
+                            Task.Factory.StartNew(() =>
+                            {
+                                Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is possible."; }));
+                                Dispatcher.BeginInvoke(new Action(() => { this.ActionBeingPerformed.Content = String.Empty; }));
+                            });
+                            CanCast = true;
+                        }
                     }
-                    else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1) == "finished")
+                    else if (data_1[0].ToLower() == "bmcmd")
                     {
-                        System.Threading.Thread.Sleep(2500);
-                        Task.Factory.StartNew(() =>
-                        {
-                            Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is possible."; }));
-                            Dispatcher.BeginInvoke(new Action(() => { this.ActionBeingPerformed.Content = String.Empty; }));
-                        });
 
-                        CanCast = true;
-                    }
-                    else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1) == "NOTfinished")
-                    {
-                        Task.Factory.StartNew(() =>
+                        if (data_1[1].ToLower() == "toggle")
                         {
-                            Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is NOT possible."; }));
-                        });
-                    }
-                    else if (argCount == 2 && api.ThirdParty.ConsoleGetArg(1) == "interruption")
-                    {
-                        Task.Factory.StartNew(() =>
+                            this.Dispatcher.Invoke(() =>
+                            {
+                                if (IsRunning == false)
+                                {
+                                    IsRunning = true;
+                                    RunPauseButton.Content = "PAUSE";
+                                    RunPauseButton.Background = Brushes.Green;
+                                    RunPauseButton.BorderBrush = Brushes.Green;
+                                }
+                                else
+                                {
+                                    IsRunning = false;
+                                    RunPauseButton.Content = "UNPAUSE";
+                                    RunPauseButton.BorderBrush = Brushes.DarkRed;
+                                    RunPauseButton.Background = Brushes.DarkRed;
+                                }
+                            });
+                        }
+                        else if (data_1[1].ToLower() == "stop" || data_1[1].ToLower() == "pause")
                         {
-                            Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting was interrupted."; }));
-                        });
+                            this.Dispatcher.Invoke(() =>
+                            {
+                                IsRunning = true;
+                                RunPauseButton.Content = "PAUSE";
+                                RunPauseButton.Background = Brushes.Green;
+                                RunPauseButton.BorderBrush = Brushes.Green;
+                            });
+                        }
+                        else if (data_1[1].ToLower() == "start" || data_1[1].ToLower() == "unpause")
+                        {
+                            this.Dispatcher.Invoke(() =>
+                            {
+                                IsRunning = false;
+                                RunPauseButton.Content = "UNPAUSE";
+                                RunPauseButton.BorderBrush = Brushes.DarkRed;
+                                RunPauseButton.Background = Brushes.DarkRed;
+                            });
+                        }
 
-                        System.Threading.Thread.Sleep(TimeSpan.FromSeconds(2.5));
-
-                        Task.Factory.StartNew(() =>
-                        {
-                            Dispatcher.BeginInvoke(new Action(() => { this.CastingPossible.Content = "Casting is possible."; }));
-                            Dispatcher.BeginInvoke(new Action(() => { this.ActionBeingPerformed.Content = String.Empty; }));
-                        });
-                        CanCast = true;
                     }
+
                 }
             }
-            System.Threading.Thread.Sleep(TimeSpan.FromMilliseconds(2000 / 500));
+            catch (Exception)
+            {
+            }
+            finally
+            {
+                listener.Close();
+            }
+
+            System.Threading.Thread.Sleep(TimeSpan.FromSeconds(1.0));
 
         }
 
@@ -1176,7 +1259,14 @@ namespace BurstMaster
                     if (System.IO.File.Exists(path + "\\" + plEffect + ".png"))
                     {
                         String pathed = path + "\\" + plEffect + ".png";
-                        BitmapImage image = new BitmapImage(new Uri(pathed, UriKind.RelativeOrAbsolute));
+                        Uri uri = new Uri(pathed, UriKind.RelativeOrAbsolute);
+                        BitmapImage image = new BitmapImage();
+                        image.BeginInit();
+                        image.UriSource = uri;
+                        image.DecodePixelHeight = 20;
+                        image.DecodePixelWidth = 20;
+                        image.EndInit();
+
                         All.Add(image);
                     }
                 }
